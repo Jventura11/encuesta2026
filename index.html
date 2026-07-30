@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Encuesta de Opinión Ciudadana - Hunucmá</title>
+<style>
+  :root{
+    --ink:#1B2A4A;
+    --ink-2:#2C3E63;
+    --paper:#F6F4EE;
+    --paper-2:#FFFFFF;
+    --line:#D8D4C7;
+    --amber:#C98A2B;
+    --amber-dark:#8A5D19;
+    --green:#3D7A54;
+    --red:#B24435;
+    --text:#26251F;
+    --text-mute:#6B6A5F;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--paper);
+    color:var(--text);
+    padding-bottom:60px;
+  }
+  header{
+    background:var(--ink);
+    color:#EDEAE0;
+    padding:18px 16px 16px;
+    position:sticky;
+    top:0;
+    z-index:20;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+  }
+  header h1{
+    font-size:15px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    margin:0 0 2px;
+    font-weight:600;
+  }
+  header p{
+    margin:0;
+    font-size:12px;
+    color:#B9C0D6;
+  }
+  .admin-toggle{
+    background:none;
+    border:1px solid #4A5A80;
+    color:#EDEAE0;
+    font-size:11.5px;
+    font-weight:600;
+    padding:6px 10px;
+    border-radius:7px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .admin-toggle.on{
+    background:var(--amber);
+    border-color:var(--amber);
+    color:#2B1B03;
+  }
+  .tabs{
+    display:flex;
+    gap:0;
+    background:var(--paper-2);
+    border-bottom:1px solid var(--line);
+    position:sticky;
+    top:60px;
+    z-index:19;
+  }
+  .tab{
+    flex:1;
+    text-align:center;
+    padding:11px 4px;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--text-mute);
+    border-bottom:3px solid transparent;
+    cursor:pointer;
+    user-select:none;
+  }
+  .tab.active{
+    color:var(--ink);
+    border-bottom-color:var(--amber);
+  }
+  main{max-width:640px;margin:0 auto;padding:16px;}
+  .card{
+    background:var(--paper-2);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:16px;
+    margin-bottom:14px;
+  }
+  .card h2{
+    font-size:13px;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    color:var(--ink-2);
+    margin:0 0 12px;
+    padding-bottom:8px;
+    border-bottom:1px solid var(--line);
+  }
+  .survey-select{
+    display:flex;
+    gap:8px;
+    margin-bottom:16px;
+  }
+  .survey-btn{
+    flex:1;
+    padding:12px 8px;
+    border-radius:10px;
+    border:1.5px solid var(--line);
+    background:var(--paper-2);
+    font-size:12.5px;
+    font-weight:600;
+    text-align:center;
+    line-height:1.3;
+    cursor:pointer;
+    color:var(--text-mute);
+  }
+  .survey-btn.active{
+    border-color:var(--ink);
+    background:var(--ink);
+    color:#fff;
+  }
+  label.field-label{
+    display:block;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--text);
+    margin:12px 0 5px;
+  }
+  label.field-label:first-child{margin-top:0;}
+  input[type=text], input[type=date], input[type=time], input[type=password], select{
+    width:100%;
+    padding:9px 10px;
+    border:1px solid var(--line);
+    border-radius:7px;
+    font-size:14px;
+    background:#fff;
+    color:var(--text);
+  }
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .chip-row{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{
+    flex:1 1 auto;
+    min-width:70px;
+    text-align:center;
+    padding:9px 6px;
+    border:1px solid var(--line);
+    border-radius:7px;
+    font-size:12.5px;
+    cursor:pointer;
+    background:#fff;
+    color:var(--text);
+  }
+  .chip.selected{
+    background:var(--ink);
+    border-color:var(--ink);
+    color:#fff;
+  }
+  .candidate-block{
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:10px 12px;
+    margin-bottom:8px;
+  }
+  .candidate-block .name{
+    font-size:13.5px;
+    font-weight:600;
+    margin-bottom:8px;
+  }
+  .yesno{display:flex;gap:8px;}
+  .yesno .chip{flex:1;padding:7px;}
+  .vote-option{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:9px 4px;
+    border-bottom:1px solid var(--line);
+    font-size:13.5px;
+    cursor:pointer;
+  }
+  .vote-option:last-child{border-bottom:none;}
+  .vote-option .dot{
+    width:16px;height:16px;border-radius:50%;
+    border:1.5px solid var(--line);
+    flex-shrink:0;
+    position:relative;
+  }
+  .vote-option.selected .dot{border-color:var(--ink);}
+  .vote-option.selected .dot::after{
+    content:"";
+    position:absolute;top:3px;left:3px;right:3px;bottom:3px;
+    border-radius:50%;background:var(--ink);
+  }
+  .otra-input{margin-top:6px;margin-left:26px;display:none;}
+  .otra-input.show{display:block;}
+  button.primary{
+    width:100%;
+    padding:13px;
+    border-radius:8px;
+    border:none;
+    background:var(--ink);
+    color:#fff;
+    font-size:14.5px;
+    font-weight:600;
+    cursor:pointer;
+    margin-top:6px;
+  }
+  button.primary:disabled{opacity:.6;cursor:default;}
+  button.secondary{
+    width:100%;
+    padding:11px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:#fff;
+    color:var(--ink);
+    font-size:13.5px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .toast{
+    position:fixed;
+    bottom:18px;left:50%;
+    transform:translateX(-50%);
+    background:var(--ink);
+    color:#fff;
+    padding:10px 18px;
+    border-radius:20px;
+    font-size:13px;
+    font-weight:600;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s;
+    z-index:50;
+    box-shadow:0 4px 14px rgba(0,0,0,.2);
+    text-align:center;
+    max-width:85%;
+  }
+  .toast.show{opacity:1;}
+  .bar-bg{
+    background:#EDEAE0;
+    border-radius:5px;
+    height:8px;
+    width:100%;
+    margin-top:5px;
+    overflow:hidden;
+  }
+  .bar-fill{
+    height:100%;
+    background:var(--amber);
+    border-radius:5px;
+  }
+  .stat-block{margin-bottom:14px;}
+  .stat-name{display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:2px;}
+  .empty{
+    text-align:center;
+    color:var(--text-mute);
+    font-size:13px;
+    padding:30px 10px;
+  }
+  .folio-tag{
+    display:inline-block;
+    font-size:10.5px;
+    font-weight:700;
+    color:var(--amber-dark);
+    background:#FBF0DC;
+    padding:2px 7px;
+    border-radius:5px;
+    letter-spacing:.03em;
+  }
+  .entry-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:10px 0;
+    border-bottom:1px solid var(--line);
+    font-size:12.5px;
+  }
+  .entry-row:last-child{border-bottom:none;}
+  .entry-meta{color:var(--text-mute);font-size:11.5px;margin-top:2px;}
+  .del-btn{
+    color:var(--red);
+    font-size:11.5px;
+    font-weight:600;
+    background:none;
+    border:none;
+    cursor:pointer;
+    padding:4px 8px;
+  }
+  .note{
+    font-size:11.5px;
+    color:var(--text-mute);
+    line-height:1.5;
+    margin-top:4px;
+  }
+  .subtabs{display:flex;gap:8px;margin-bottom:14px;}
+  .subtab{
+    flex:1;
+    text-align:center;
+    padding:8px 6px;
+    font-size:12px;
+    font-weight:600;
+    border-radius:7px;
+    border:1px solid var(--line);
+    background:#fff;
+    color:var(--text-mute);
+    cursor:pointer;
+  }
+  .subtab.active{background:var(--ink);border-color:var(--ink);color:#fff;}
+  .login-box{max-width:320px;margin:20px auto;text-align:center;}
+  .login-box p{font-size:12.5px;color:var(--text-mute);margin-bottom:14px;}
+  .error-msg{color:var(--red);font-size:12px;margin-top:8px;min-height:16px;}
+  .logout-row{display:flex;justify-content:flex-end;margin-bottom:10px;}
+  .logout-link{
+    background:none;border:none;color:var(--text-mute);
+    font-size:11.5px;text-decoration:underline;cursor:pointer;padding:0;
+  }
+  .spinner{
+    display:inline-block;width:14px;height:14px;
+    border:2px solid rgba(255,255,255,.4);
+    border-top-color:#fff;border-radius:50%;
+    animation:spin .7s linear infinite;
+    vertical-align:-2px;margin-right:6px;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Encuesta de opinión ciudadana</h1>
+    <p>Hunucmá, Yucatán</p>
+  </div>
+  <button class="admin-toggle" id="btn-admin-toggle">Administrador</button>
+</header>
+
+<div class="tabs">
+  <div class="tab active" data-view="capture">Nueva encuesta</div>
+  <div class="tab" data-view="admin">Administrador</div>
+</div>
+
+<main>
+
+  <div id="view-capture">
+    <div class="card">
+      <h2>Tipo de encuesta</h2>
+      <div class="survey-select">
+        <div class="survey-btn active" data-survey="municipal">Municipio Hunucmá<br>Presidencia municipal</div>
+        <div class="survey-btn" data-survey="diputacion">Distrito Local 13<br>Diputación local</div>
+      </div>
+
+      <label class="field-label">Folio</label>
+      <input type="text" id="f-folio" placeholder="Ej. 001">
+
+      <div class="grid2">
+        <div>
+          <label class="field-label">Fecha</label>
+          <input type="date" id="f-fecha">
+        </div>
+        <div>
+          <label class="field-label">Hora</label>
+          <input type="time" id="f-hora">
+        </div>
+      </div>
+
+      <label class="field-label">Colonia / Comisaría</label>
+      <input type="text" id="f-colonia" placeholder="Ej. Centro">
+
+      <label class="field-label">Sección electoral</label>
+      <input type="text" id="f-seccion" placeholder="Ej. 1234">
+    </div>
+
+    <div class="card">
+      <h2>Datos generales</h2>
+      <label class="field-label">Edad</label>
+      <div class="chip-row" id="edad-chips">
+        <div class="chip" data-val="18-24">18-24</div>
+        <div class="chip" data-val="25-34">25-34</div>
+        <div class="chip" data-val="35-44">35-44</div>
+        <div class="chip" data-val="45-54">45-54</div>
+        <div class="chip" data-val="55-64">55-64</div>
+        <div class="chip" data-val="65 o más">65+</div>
+      </div>
+      <label class="field-label">Sexo</label>
+      <div class="chip-row" id="sexo-chips">
+        <div class="chip" data-val="Mujer">Mujer</div>
+        <div class="chip" data-val="Hombre">Hombre</div>
+        <div class="chip" data-val="Prefiere no responder">Prefiere no responder</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Pregunta 1 · ¿Conoce o ha escuchado mencionar a...?</h2>
+      <div id="p1-candidates"></div>
+    </div>
+
+    <div class="card">
+      <h2>Pregunta 2 · ¿Por cuál votaría si hoy fueran las elecciones?</h2>
+      <div id="p2-options"></div>
+    </div>
+
+    <div class="card">
+      <h2>Pregunta 3 · ¿Qué tan segura(o) está de su decisión?</h2>
+      <div class="chip-row" id="p3-chips" style="flex-wrap:wrap;">
+        <div class="chip" data-val="Muy seguro(a)">Muy seguro(a)</div>
+        <div class="chip" data-val="Algo seguro(a)">Algo seguro(a)</div>
+        <div class="chip" data-val="Poco seguro(a)">Poco seguro(a)</div>
+        <div class="chip" data-val="Podría cambiar">Podría cambiar</div>
+        <div class="chip" data-val="No sabe">No sabe</div>
+      </div>
+    </div>
+
+    <button class="primary" id="btn-guardar">Guardar encuesta</button>
+  </div>
+
+  <div id="view-admin" style="display:none;">
+
+    <div id="admin-login-wrap">
+      <div class="card login-box">
+        <h2 style="border:none;">Acceso administrador</h2>
+        <p>Ingresa la contraseña para ver resultados y exportar los datos.</p>
+        <input type="password" id="admin-password" placeholder="Contraseña">
+        <button class="primary" id="btn-admin-login">Entrar</button>
+        <div class="error-msg" id="admin-login-error"></div>
+      </div>
+    </div>
+
+    <div id="admin-panel-wrap" style="display:none;">
+      <div class="logout-row">
+        <button class="logout-link" id="btn-logout">Cerrar sesión</button>
+      </div>
+      <div class="subtabs">
+        <div class="subtab active" data-sub="results">Resultados</div>
+        <div class="subtab" data-sub="export">Exportar</div>
+      </div>
+
+      <div id="sub-results">
+        <div class="card">
+          <h2>Resumen · Municipio Hunucmá (Presidencia)</h2>
+          <div id="res-municipal"></div>
+        </div>
+        <div class="card">
+          <h2>Resumen · Distrito Local 13 (Diputación)</h2>
+          <div id="res-diputacion"></div>
+        </div>
+        <div class="card">
+          <h2>Últimos registros</h2>
+          <div id="res-list"></div>
+        </div>
+      </div>
+
+      <div id="sub-export" style="display:none;">
+        <div class="card">
+          <h2>Exportar datos</h2>
+          <p class="note">Descarga los registros en CSV, listos para abrir en Excel, Power BI o pandas.read_csv en Python.</p>
+          <button class="primary" id="btn-export-mun">Descargar CSV · Presidencia municipal</button>
+          <div style="height:10px;"></div>
+          <button class="primary" id="btn-export-dip">Descargar CSV · Diputación local</button>
+          <div style="height:10px;"></div>
+          <button class="secondary" id="btn-export-all">Descargar CSV · Todo junto</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// PEGA AQUÍ la URL de tu Google Apps Script desplegado (termina en /exec)
+// ============================================================
+const APPS_SCRIPT_URL = "PEGA_AQUI_TU_URL_DE_APPS_SCRIPT";
+
+const CANDIDATES = {
+  municipal: ["Germán Quintal","Cristina Pérez","Mario Balam","Gilberto Can"],
+  diputacion: ["Marlene Martín","Samuel Mayen","Gilberto Can"]
+};
+const LABELS = {
+  municipal: "Municipio Hunucmá (Presidencia municipal)",
+  diputacion: "Distrito Local 13 (Diputación local)"
+};
+const SURVEY_ORDER = ["municipal","diputacion"];
+
+let state = { survey: "municipal", edad:null, sexo:null, p1:{}, p2:null, p2_otra:"", p3:null };
+let adminToken = null;
+
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"), 2200);
+}
+
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function nowTimeStr(){ return new Date().toTimeString().slice(0,5); }
+
+async function callBackend(action, payload){
+  if(!APPS_SCRIPT_URL || APPS_SCRIPT_URL.indexOf("PEGA_AQUI") === 0){
+    toast("Falta configurar la URL de Apps Script en el código");
+    return { ok:false, error:"URL no configurada" };
+  }
+  const res = await fetch(APPS_SCRIPT_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({ action, payload })
+  });
+  return await res.json();
+}
+
+function renderP1(){
+  const box = document.getElementById("p1-candidates");
+  box.innerHTML = "";
+  CANDIDATES[state.survey].forEach(name=>{
+    const div = document.createElement("div");
+    div.className = "candidate-block";
+    div.innerHTML = `
+      <div class="name">${name}</div>
+      <div class="yesno">
+        <div class="chip yn-si" data-name="${name}" data-val="Sí">Sí</div>
+        <div class="chip yn-no" data-name="${name}" data-val="No">No</div>
+      </div>`;
+    box.appendChild(div);
+  });
+  box.querySelectorAll(".yn-si, .yn-no").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      const name = el.dataset.name;
+      const val = el.dataset.val;
+      state.p1[name] = val;
+      box.querySelectorAll(`[data-name="${CSS.escape(name)}"]`).forEach(x=>x.classList.remove("selected"));
+      el.classList.add("selected");
+    });
+  });
+}
+
+function renderP2(){
+  const box = document.getElementById("p2-options");
+  box.innerHTML = "";
+  const opts = [...CANDIDATES[state.survey], "Otra persona", "Ninguno(a)", "Aún no decide", "Prefiere no responder"];
+  opts.forEach(opt=>{
+    const div = document.createElement("div");
+    div.className = "vote-option";
+    div.dataset.val = opt;
+    div.innerHTML = `<div class="dot"></div><div>${opt}</div>`;
+    div.addEventListener("click", ()=>{
+      state.p2 = opt;
+      box.querySelectorAll(".vote-option").forEach(x=>x.classList.remove("selected"));
+      div.classList.add("selected");
+      const otraBox = document.getElementById("p2-otra-wrap");
+      if (opt === "Otra persona"){ otraBox.classList.add("show"); }
+      else { otraBox.classList.remove("show"); state.p2_otra=""; document.getElementById("p2-otra-input").value=""; }
+    });
+    box.appendChild(div);
+  });
+  const otraWrap = document.createElement("div");
+  otraWrap.className = "otra-input";
+  otraWrap.id = "p2-otra-wrap";
+  otraWrap.innerHTML = `<input type="text" id="p2-otra-input" placeholder="Nombre de la otra persona">`;
+  box.appendChild(otraWrap);
+  document.getElementById("p2-otra-input").addEventListener("input", (e)=>{
+    state.p2_otra = e.target.value;
+  });
+}
+
+function resetForm(keepSurvey){
+  const survey = keepSurvey ? state.survey : "municipal";
+  state = { survey, edad:null, sexo:null, p1:{}, p2:null, p2_otra:"", p3:null };
+  document.getElementById("f-folio").value = "";
+  document.getElementById("f-fecha").value = todayStr();
+  document.getElementById("f-hora").value = nowTimeStr();
+  document.getElementById("f-colonia").value = "";
+  document.getElementById("f-seccion").value = "";
+  document.querySelectorAll("#edad-chips .chip, #sexo-chips .chip, #p3-chips .chip").forEach(c=>c.classList.remove("selected"));
+  renderP1(); renderP2();
+}
+
+document.querySelectorAll(".survey-btn").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    document.querySelectorAll(".survey-btn").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    state.survey = btn.dataset.survey;
+    state.p1 = {}; state.p2 = null; state.p2_otra = "";
+    renderP1(); renderP2();
+  });
+});
+
+document.getElementById("edad-chips").addEventListener("click", (e)=>{
+  const chip = e.target.closest(".chip");
+  if(!chip) return;
+  document.querySelectorAll("#edad-chips .chip").forEach(c=>c.classList.remove("selected"));
+  chip.classList.add("selected");
+  state.edad = chip.dataset.val;
+});
+document.getElementById("sexo-chips").addEventListener("click", (e)=>{
+  const chip = e.target.closest(".chip");
+  if(!chip) return;
+  document.querySelectorAll("#sexo-chips .chip").forEach(c=>c.classList.remove("selected"));
+  chip.classList.add("selected");
+  state.sexo = chip.dataset.val;
+});
+document.getElementById("p3-chips").addEventListener("click", (e)=>{
+  const chip = e.target.closest(".chip");
+  if(!chip) return;
+  document.querySelectorAll("#p3-chips .chip").forEach(c=>c.classList.remove("selected"));
+  chip.classList.add("selected");
+  state.p3 = chip.dataset.val;
+});
+
+async function saveEntry(){
+  const folio = document.getElementById("f-folio").value.trim();
+  const fecha = document.getElementById("f-fecha").value;
+  const hora = document.getElementById("f-hora").value;
+  const colonia = document.getElementById("f-colonia").value.trim();
+  const seccion = document.getElementById("f-seccion").value.trim();
+
+  if(!folio){ toast("Falta el folio"); return; }
+  if(!state.edad){ toast("Falta la edad"); return; }
+  if(!state.p2){ toast("Falta la pregunta 2 (voto)"); return; }
+  if(!state.p3){ toast("Falta la pregunta 3 (seguridad)"); return; }
+
+  const payload = {
+    survey: state.survey,
+    folio, fecha, hora, colonia, seccion,
+    edad: state.edad,
+    sexo: state.sexo || "",
+    p1: state.p1,
+    p2: state.p2 === "Otra persona" ? (state.p2_otra || "Otra persona") : state.p2,
+    p3: state.p3
+  };
+
+  const btn = document.getElementById("btn-guardar");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Guardando...';
+  try{
+    const resp = await callBackend("saveEntry", payload);
+    if(resp.ok){
+      toast("Encuesta guardada");
+      resetForm(true);
+    } else {
+      toast(resp.error || "No se pudo guardar");
+    }
+  }catch(err){
+    console.error(err);
+    toast("Error de conexión. Revisa tu internet.");
+  }finally{
+    btn.disabled = false;
+    btn.textContent = "Guardar encuesta";
+  }
+}
+
+document.getElementById("btn-guardar").addEventListener("click", saveEntry);
+
+// ---------- Navegación de pestañas principales ----------
+document.querySelectorAll(".tab").forEach(tab=>{
+  tab.addEventListener("click", ()=>{
+    document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+    tab.classList.add("active");
+    const view = tab.dataset.view;
+    document.getElementById("view-capture").style.display = view==="capture" ? "block":"none";
+    document.getElementById("view-admin").style.display = view==="admin" ? "block":"none";
+  });
+});
+
+// ---------- Login administrador ----------
+document.getElementById("btn-admin-login").addEventListener("click", doAdminLogin);
+document.getElementById("admin-password").addEventListener("keydown", (e)=>{
+  if(e.key === "Enter") doAdminLogin();
+});
+
+async function doAdminLogin(){
+  const pass = document.getElementById("admin-password").value;
+  const errBox = document.getElementById("admin-login-error");
+  errBox.textContent = "";
+  if(!pass){ errBox.textContent = "Ingresa la contraseña"; return; }
+  try{
+    const resp = await callBackend("adminLogin", { password: pass });
+    if(resp.ok){
+      adminToken = resp.token;
+      document.getElementById("admin-login-wrap").style.display = "none";
+      document.getElementById("admin-panel-wrap").style.display = "block";
+      document.getElementById("btn-admin-toggle").classList.add("on");
+      document.getElementById("admin-password").value = "";
+      refreshAdminData();
+    } else {
+      errBox.textContent = resp.error || "No se pudo iniciar sesión";
+    }
+  }catch(err){
+    console.error(err);
+    errBox.textContent = "Error de conexión";
+  }
+}
+
+document.getElementById("btn-logout").addEventListener("click", ()=>{
+  adminToken = null;
+  document.getElementById("admin-panel-wrap").style.display = "none";
+  document.getElementById("admin-login-wrap").style.display = "block";
+  document.getElementById("btn-admin-toggle").classList.remove("on");
+});
+
+document.getElementById("btn-admin-toggle").addEventListener("click", ()=>{
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  document.querySelector('.tab[data-view="admin"]').classList.add("active");
+  document.getElementById("view-capture").style.display = "none";
+  document.getElementById("view-admin").style.display = "block";
+});
+
+// ---------- Sub-pestañas dentro de Administrador ----------
+document.querySelectorAll(".subtab").forEach(st=>{
+  st.addEventListener("click", ()=>{
+    document.querySelectorAll(".subtab").forEach(s=>s.classList.remove("active"));
+    st.classList.add("active");
+    const sub = st.dataset.sub;
+    document.getElementById("sub-results").style.display = sub==="results" ? "block":"none";
+    document.getElementById("sub-export").style.display = sub==="export" ? "block":"none";
+  });
+});
+
+// ---------- Datos de administrador (resultados + export) ----------
+function pct(n, total){ if(total===0) return 0; return Math.round((n/total)*100); }
+
+async function refreshAdminData(){
+  if(!adminToken) return;
+  try{
+    const resp = await callBackend("adminGetData", { token: adminToken, survey: "all" });
+    if(!resp.ok){
+      toast(resp.error || "No se pudo cargar la información");
+      return;
+    }
+    window._adminData = resp.data;
+    renderResultsFor("municipal", "res-municipal", resp.data);
+    renderResultsFor("diputacion", "res-diputacion", resp.data);
+    renderList(resp.data);
+  }catch(err){
+    console.error(err);
+    toast("Error de conexión al cargar datos");
+  }
+}
+
+function renderResultsFor(surveyKey, containerId, data){
+  const box = document.getElementById(containerId);
+  const subset = data[surveyKey] || [];
+  if(subset.length === 0){
+    box.innerHTML = `<div class="empty">Aún no hay encuestas capturadas para esta boleta.</div>`;
+    return;
+  }
+  const tally = {};
+  subset.forEach(e=>{
+    const key = e.voto_pregunta2;
+    tally[key] = (tally[key]||0) + 1;
+  });
+  const total = subset.length;
+  const sorted = Object.entries(tally).sort((a,b)=>b[1]-a[1]);
+  let html = `<div style="padding-bottom:12px;"><span style="color:var(--text-mute);font-size:13px;">Total de encuestas: </span><span style="font-weight:700;">${total}</span></div>`;
+  sorted.forEach(([name,count])=>{
+    const p = pct(count,total);
+    html += `
+      <div class="stat-block">
+        <div class="stat-name"><span>${name}</span><span>${count} (${p}%)</span></div>
+        <div class="bar-bg"><div class="bar-fill" style="width:${p}%;"></div></div>
+      </div>`;
+  });
+  box.innerHTML = html;
+}
+
+function renderList(data){
+  const box = document.getElementById("res-list");
+  const all = [...(data.municipal||[]).map(e=>({...e, _survey:"municipal"})), ...(data.diputacion||[]).map(e=>({...e, _survey:"diputacion"}))];
+  all.sort((a,b)=> new Date(b.marca_tiempo) - new Date(a.marca_tiempo));
+  if(all.length === 0){
+    box.innerHTML = `<div class="empty">Sin registros todavía.</div>`;
+    return;
+  }
+  let html = "";
+  all.slice(0,25).forEach(e=>{
+    html += `
+      <div class="entry-row">
+        <div>
+          <span class="folio-tag">Folio ${e.folio}</span>
+          <div class="entry-meta">${LABELS[e._survey]} · vota: ${e.voto_pregunta2} · ${e.fecha||""} ${e.hora||""}</div>
+        </div>
+        <button class="del-btn" data-id="${e.id}" data-survey="${e._survey}">Eliminar</button>
+      </div>`;
+  });
+  box.innerHTML = html;
+  box.querySelectorAll(".del-btn").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      if(!confirm("¿Eliminar este registro?")) return;
+      const resp = await callBackend("adminDeleteEntry", { token: adminToken, survey: btn.dataset.survey, id: btn.dataset.id });
+      if(resp.ok){ toast("Registro eliminado"); refreshAdminData(); }
+      else{ toast(resp.error || "No se pudo eliminar"); }
+    });
+  });
+}
+
+function toCSV(data, surveyKey){
+  const keys = surveyKey ? [surveyKey] : SURVEY_ORDER;
+  const headers = ["boleta","folio","fecha","hora","colonia_comisaria","seccion_electoral","edad","sexo","candidato_conoce","respuesta_conoce","voto_pregunta2","seguridad_pregunta3"];
+  const rows = [headers.join(",")];
+  keys.forEach(k=>{
+    const cands = CANDIDATES[k];
+    (data[k]||[]).forEach(e=>{
+      cands.forEach(c=>{
+        const conoceVal = e["conoce_" + c] || "";
+        const row = [LABELS[k], e.folio, e.fecha, e.hora, e.colonia_comisaria, e.seccion_electoral, e.edad, e.sexo, c, conoceVal, e.voto_pregunta2, e.seguridad_pregunta3]
+          .map(v=>{
+            const s = (v===undefined || v===null) ? "" : String(v);
+            return '"' + s.replace(/"/g,'""') + '"';
+          });
+        rows.push(row.join(","));
+      });
+    });
+  });
+  return rows.join("\n");
+}
+
+function downloadCSV(csv, filename){
+  const blob = new Blob(["\uFEFF"+csv], {type:"text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+document.getElementById("btn-export-mun").addEventListener("click", async ()=>{
+  const resp = await callBackend("adminGetData", { token: adminToken, survey: "all" });
+  if(!resp.ok){ toast(resp.error || "No se pudo exportar"); return; }
+  downloadCSV(toCSV(resp.data,"municipal"), "encuesta_presidencia_municipal.csv");
+});
+document.getElementById("btn-export-dip").addEventListener("click", async ()=>{
+  const resp = await callBackend("adminGetData", { token: adminToken, survey: "all" });
+  if(!resp.ok){ toast(resp.error || "No se pudo exportar"); return; }
+  downloadCSV(toCSV(resp.data,"diputacion"), "encuesta_diputacion_local_13.csv");
+});
+document.getElementById("btn-export-all").addEventListener("click", async ()=>{
+  const resp = await callBackend("adminGetData", { token: adminToken, survey: "all" });
+  if(!resp.ok){ toast(resp.error || "No se pudo exportar"); return; }
+  downloadCSV(toCSV(resp.data,null), "encuesta_hunucma_todo.csv");
+});
+
+resetForm(false);
+</script>
+</body>
+</html>
