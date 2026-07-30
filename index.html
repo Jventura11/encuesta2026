@@ -331,6 +331,66 @@
     vertical-align:-2px;margin-right:6px;
   }
   @keyframes spin{to{transform:rotate(360deg);}}
+
+  .chart-toggle{display:flex;gap:8px;margin-bottom:16px;}
+  .chart-toggle .survey-btn{padding:10px 8px;font-size:12px;}
+  .chart-wrap{
+    display:flex;
+    align-items:flex-end;
+    gap:10px;
+    overflow-x:auto;
+    padding:8px 4px 4px;
+    min-height:230px;
+  }
+  .chart-bar-col{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    flex:1 0 72px;
+    max-width:96px;
+  }
+  .chart-pct{
+    font-size:17px;
+    font-weight:700;
+    margin-bottom:6px;
+    white-space:nowrap;
+  }
+  .chart-bar{
+    width:34px;
+    border-radius:6px 6px 0 0;
+    transition:height .3s;
+  }
+  .chart-avatar{
+    width:40px;height:40px;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:13px;font-weight:700;color:#fff;
+    margin-top:10px;
+    flex-shrink:0;
+  }
+  .chart-name{
+    font-size:11.5px;
+    font-weight:600;
+    text-align:center;
+    margin-top:6px;
+    line-height:1.25;
+  }
+  .chart-party{
+    font-size:10px;
+    color:var(--text-mute);
+    margin-top:2px;
+    text-align:center;
+  }
+  .chart-footer{
+    display:flex;
+    justify-content:space-around;
+    border-top:1px solid var(--line);
+    margin-top:16px;
+    padding-top:12px;
+  }
+  .chart-footer-item{text-align:center;}
+  .chart-footer-item .num{font-size:15px;font-weight:700;display:block;}
+  .chart-footer-item .lbl{font-size:10.5px;color:var(--text-mute);}
 </style>
 </head>
 <body>
@@ -440,6 +500,7 @@
       </div>
       <div class="subtabs">
         <div class="subtab active" data-sub="results">Resultados</div>
+        <div class="subtab" data-sub="charts">Gráficos</div>
         <div class="subtab" data-sub="export">Exportar</div>
       </div>
 
@@ -455,6 +516,21 @@
         <div class="card">
           <h2>Últimos registros</h2>
           <div id="res-list"></div>
+        </div>
+      </div>
+
+      <div id="sub-charts" style="display:none;">
+        <div class="card">
+          <div class="chart-toggle">
+            <div class="survey-btn active" data-chart-survey="municipal">Presidencia municipal</div>
+            <div class="survey-btn" data-chart-survey="diputacion">Diputación local</div>
+          </div>
+          <h2 id="chart-title" style="border:none;margin-bottom:4px;">¿Por quién votarías?</h2>
+          <div id="chart-capture-area">
+            <div id="chart-container"></div>
+            <div class="chart-footer" id="chart-footer"></div>
+          </div>
+          <button class="secondary" id="btn-download-chart" style="margin-top:14px;">Descargar gráfica (PNG)</button>
         </div>
       </div>
 
@@ -477,11 +553,12 @@
 
 <div class="toast" id="toast"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 // ============================================================
 // PEGA AQUÍ la URL de tu Google Apps Script desplegado (termina en /exec)
 // ============================================================
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwtr1tosjTE2mfPlhhWPgqIv13zjLly7cFyN9M5pSv-vlxqcDiXov1whVeFBeZ0GuJ6/exec";
+const APPS_SCRIPT_URL = "PEGA_AQUI_TU_URL_DE_APPS_SCRIPT";
 
 const CANDIDATES = {
   municipal: ["Germán Quintal","Cristina Pérez","Mario Balam","Gilberto Can"],
@@ -722,8 +799,124 @@ document.querySelectorAll(".subtab").forEach(st=>{
     st.classList.add("active");
     const sub = st.dataset.sub;
     document.getElementById("sub-results").style.display = sub==="results" ? "block":"none";
+    document.getElementById("sub-charts").style.display = sub==="charts" ? "block":"none";
     document.getElementById("sub-export").style.display = sub==="export" ? "block":"none";
+    if(sub==="charts") renderChart(currentChartSurvey);
   });
+});
+
+// ---------- Gráficos visuales ----------
+// Edita aquí el partido de cada candidato si quieres mostrarlo (texto, no logo).
+// Deja "" si no quieres mostrar partido.
+const PARTY_LABELS = {
+  "Germán Quintal": "",
+  "Cristina Pérez": "",
+  "Mario Balam": "",
+  "Gilberto Can": "",
+  "Marlene Martín": "",
+  "Samuel Mayen": ""
+};
+const CHART_COLORS = ["#1B2A4A","#C98A2B","#3D7A54","#8A5D19","#6B5B95","#2C3E63","#B24435"];
+const CHART_GRAY = "#9A968A";
+let currentChartSurvey = "municipal";
+
+function initials(name){
+  return name.split(" ").filter(w=>w.length>0).slice(0,2).map(w=>w[0]).join("").toUpperCase();
+}
+
+document.querySelectorAll("[data-chart-survey]").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    document.querySelectorAll("[data-chart-survey]").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    currentChartSurvey = btn.dataset.chartSurvey;
+    renderChart(currentChartSurvey);
+  });
+});
+
+function renderChart(surveyKey){
+  const data = window._adminData;
+  const container = document.getElementById("chart-container");
+  const footer = document.getElementById("chart-footer");
+  document.getElementById("chart-title").textContent = "¿Por quién votarías? · " + LABELS[surveyKey];
+  if(!data){ container.innerHTML = `<div class="empty">Entra a "Resultados" primero para cargar los datos.</div>`; footer.innerHTML=""; return; }
+  const subset = data[surveyKey] || [];
+  if(subset.length === 0){
+    container.innerHTML = `<div class="empty">Aún no hay encuestas capturadas para esta boleta.</div>`;
+    footer.innerHTML = "";
+    return;
+  }
+  const candidateNames = CANDIDATES[surveyKey];
+  const tally = {};
+  subset.forEach(e=>{ tally[e.voto_pregunta2] = (tally[e.voto_pregunta2]||0) + 1; });
+
+  const candidateBars = [];
+  let otrosCount = 0;
+  Object.entries(tally).forEach(([name,count])=>{
+    if(candidateNames.includes(name)){ candidateBars.push([name,count]); }
+    else { otrosCount += count; }
+  });
+  candidateBars.sort((a,b)=>b[1]-a[1]);
+
+  const total = subset.length;
+  const maxCount = Math.max(...candidateBars.map(c=>c[1]), otrosCount, 1);
+  const maxBarHeight = 150;
+
+  let html = "";
+  candidateBars.forEach(([name,count], idx)=>{
+    const p = pct(count,total);
+    const h = Math.max(10, Math.round((count/maxCount)*maxBarHeight));
+    const color = CHART_COLORS[idx % CHART_COLORS.length];
+    const party = PARTY_LABELS[name] || "";
+    html += `
+      <div class="chart-bar-col">
+        <div class="chart-pct" style="color:${color};">${p}%</div>
+        <div class="chart-bar" style="height:${h}px;background:${color};"></div>
+        <div class="chart-avatar" style="background:${color};">${initials(name)}</div>
+        <div class="chart-name">${name}</div>
+        ${party ? `<div class="chart-party">${party}</div>` : ""}
+      </div>`;
+  });
+  if(otrosCount > 0){
+    const p = pct(otrosCount,total);
+    const h = Math.max(10, Math.round((otrosCount/maxCount)*maxBarHeight));
+    html += `
+      <div class="chart-bar-col">
+        <div class="chart-pct" style="color:${CHART_GRAY};">${p}%</div>
+        <div class="chart-bar" style="height:${h}px;background:${CHART_GRAY};"></div>
+        <div class="chart-avatar" style="background:${CHART_GRAY};">?</div>
+        <div class="chart-name">Indecisos / otros</div>
+      </div>`;
+  }
+  container.innerHTML = html;
+  footer.innerHTML = `
+    <div class="chart-footer-item"><span class="num">${total}</span><span class="lbl">Muestra (casos)</span></div>
+    <div class="chart-footer-item"><span class="num">${candidateBars.length}</span><span class="lbl">Candidatos con voto</span></div>
+    <div class="chart-footer-item"><span class="num">${todayStr()}</span><span class="lbl">Corte</span></div>
+  `;
+}
+
+document.getElementById("btn-download-chart").addEventListener("click", async ()=>{
+  const btn = document.getElementById("btn-download-chart");
+  const target = document.getElementById("chart-capture-area");
+  btn.disabled = true;
+  btn.textContent = "Generando imagen...";
+  try{
+    const canvas = await html2canvas(target, { backgroundColor: "#FFFFFF", scale: 2 });
+    canvas.toBlob(blob=>{
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "grafica_" + currentChartSurvey + "_" + todayStr() + ".png";
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+  }catch(err){
+    console.error(err);
+    toast("No se pudo generar la imagen");
+  }finally{
+    btn.disabled = false;
+    btn.textContent = "Descargar gráfica (PNG)";
+  }
 });
 
 // ---------- Datos de administrador (resultados + export) ----------
@@ -741,6 +934,7 @@ async function refreshAdminData(){
     renderResultsFor("municipal", "res-municipal", resp.data);
     renderResultsFor("diputacion", "res-diputacion", resp.data);
     renderList(resp.data);
+    renderChart(currentChartSurvey);
   }catch(err){
     console.error(err);
     toast("Error de conexión al cargar datos");
